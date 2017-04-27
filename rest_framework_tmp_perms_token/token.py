@@ -44,7 +44,7 @@ class TemporaryApiToken():
         }
         if self.recipient is not None:
             unsigned_token['recipient'] = self.recipient
-        return signing.dumps(unsigned_token)
+        return signing.dumps(unsigned_token)  # TODO: Salt
 
     def authenticate(self, request):
         for endpoint in self.endpoints.get(request.method, []):
