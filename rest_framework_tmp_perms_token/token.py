@@ -29,7 +29,8 @@ class TemporaryApiToken():
     SignatureExpired = signing.SignatureExpired
     BadSignature = signing.BadSignature
 
-    def __init__(self, user, endpoints: dict, max_age: int=360, recipient: str=None):
+    def __init__(self, user, endpoints: dict,
+                 max_age: int=360, recipient: str=None):
         self.user = user
         self.endpoints = endpoints
         self.max_age = max_age
