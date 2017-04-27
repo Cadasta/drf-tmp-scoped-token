@@ -2,6 +2,33 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
+import subprocess
+
+
+class color:
+   PURPLE = '\033[95m'
+   CYAN = '\033[96m'
+   DARKCYAN = '\033[36m'
+   BLUE = '\033[94m'
+   GREEN = '\033[92m'
+   YELLOW = '\033[93m'
+   RED = '\033[91m'
+   BOLD = '\033[1m'
+   UNDERLINE = '\033[4m'
+   END = '\033[0m'
+
+
+def heading(str):
+    print('\n' + color.BOLD + str + color.END)
+    sys.stdout.flush()
+
+
+def err(str):
+    print(color.RED + str + color.END)
+
+
+def success(str):
+    print(color.GREEN + str + color.END)
 
 
 def is_set(flag):
@@ -23,38 +50,47 @@ def run_tests(args):
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings")
 
     execute_from_command_line(args)
+    success("Tests passed.")
 
 
 def run_coverage(args):
     """
     Run tests with coverage tooling.
     """
-    import subprocess
-
     # Run tests
-    print('TESTS:')
+    heading('TESTS')
     cmd = 'coverage run ' + ' '.join(args) + ' --skip-coverage'
     ret = subprocess.call(cmd, shell=True)
     if ret:
         return ret
 
     # Run coverage
-    print('\nCOVERAGE REPORT:')
+    heading('COVERAGE REPORT')
     output = subprocess.check_output('coverage report', shell=True).decode('utf-8')
     print(output)
 
     # Analyze coverage report
     coverage = output.split()[-1]
     if coverage == '100%':
-        print("Success, coverage at 100%")
+        success("Coverage at 100%.")
         return 0
     else:
-        print("Failure, coverage not at 100% (got {})".format(coverage))
-        return -1
+        err("Failure, coverage not at 100% (got {})".format(coverage))
+        return 1
+
+
+def run_flake8():
+    heading('FLAKE8')
+    ret = subprocess.call("flake8 rest_framework_tmp_perms_token", shell=True)
+    if not ret:
+        success("Flake8 found no issues.")
+    return ret
 
 
 if __name__ == "__main__":
+    if is_set('--only-flake8'):
+        sys.exit(run_flake8())
     if is_set('--skip-coverage'):
         sys.exit(run_tests(sys.argv))
     else:
-        sys.exit(run_coverage(sys.argv))
+        sys.exit(run_coverage(sys.argv) + run_flake8())
