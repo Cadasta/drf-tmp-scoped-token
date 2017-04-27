@@ -76,7 +76,8 @@ setup(
     package_data=get_package_data(package),
     install_requires=[
         'django',
-        'djangorestframework'
+        'djangorestframework',
+        'six'
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',

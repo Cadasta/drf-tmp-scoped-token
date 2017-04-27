@@ -1,5 +1,6 @@
 from django.core import signing
 from django.contrib.auth import get_user_model
+import six
 
 
 class TemporaryApiToken():
@@ -29,8 +30,7 @@ class TemporaryApiToken():
     SignatureExpired = signing.SignatureExpired
     BadSignature = signing.BadSignature
 
-    def __init__(self, user, endpoints: dict,
-                 max_age: int=360, recipient: str=None):
+    def __init__(self, user, endpoints, max_age=360, recipient=None):
         self.user = user
         self.endpoints = endpoints
         self.max_age = max_age
@@ -77,7 +77,8 @@ class TemporaryApiToken():
                 ("Endpoints must be a list or tuple,"
                  " got {}".format(type(endpoints).__name__))
             for endpoint in endpoints:
-                assert isinstance(endpoint, str), "Endpoints must be strings"
+                assert isinstance(endpoint, six.string_types), \
+                    "Endpoints must be strings"
                 assert endpoint.startswith('/'), \
                     "Endpoints must begin with a slash"
 
