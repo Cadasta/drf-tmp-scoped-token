@@ -59,7 +59,7 @@ def run_coverage(args):
     """
     # Run tests
     heading('TESTS')
-    cmd = 'coverage run ' + ' '.join(args) + ' --skip-coverage'
+    cmd = 'coverage run ' + ' '.join(args) + ' --only-tests'
     ret = subprocess.call(cmd, shell=True)
     if ret:
         return ret
@@ -91,7 +91,7 @@ def run_flake8():
 if __name__ == "__main__":
     if is_set('--only-flake8'):
         sys.exit(run_flake8())
-    if is_set('--skip-coverage'):
+    if is_set('--only-tests'):
         sys.exit(run_tests(sys.argv))
     else:
         sys.exit(run_coverage(sys.argv) + run_flake8())
