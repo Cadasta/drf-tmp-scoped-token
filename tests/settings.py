@@ -14,7 +14,7 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
 
     'rest_framework',
-    'rest_framework_tmp_perms_token_tests'
+    'test_app'
 )
 
 try:

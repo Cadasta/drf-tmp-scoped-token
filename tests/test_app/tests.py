@@ -22,11 +22,45 @@ class TestAuth(unittest.TestCase):
         )
         request = self.factory.post(
             '/foo/some-nested-endpoint/',
-            Authorization="Token " + t.generate_signed_token()
+            Authorization="TmpToken {}".format(t.generate_signed_token())
+        )
+        self.assertEqual(
+            ApiTokenAuthentication().authenticate(request), (self.user, None)
+        )
+
+    def test_api_recipient_header(self):
+        t = TemporaryApiToken(
+            user=self.user,
+            endpoints=dict(GET=['/bar'], POST=['/foo']),
+            max_age=10,
+            recipient='my-new-microservice'
+        )
+        request = self.factory.post(
+            '/foo/some-nested-endpoint/',
+            Authorization="TmpToken {}".format(t.generate_signed_token())
         )
         ApiTokenAuthentication().authenticate(request)
-        recipient = request.META.get('X-API-Token-Recipient')
-        assert recipient == "my-new-microservice"
+        self.assertEqual(
+            request.META.get('X-API-Token-Recipient'), "my-new-microservice"
+        )
+
+    def test_custom_keyword(self):
+        class MyCustomAuth(ApiTokenAuthentication):
+            keyword = 'FooBar'
+
+        t = TemporaryApiToken(
+            user=self.user,
+            endpoints=dict(GET=['/bar'], POST=['/foo']),
+            max_age=10,
+            recipient='my-new-microservice'
+        )
+        request = self.factory.post(
+            '/foo/some-nested-endpoint/',
+            Authorization="FooBar {}".format(t.generate_signed_token())
+        )
+        self.assertEqual(
+            MyCustomAuth().authenticate(request), (self.user, None)
+        )
 
     def test_valid_request_query_arg(self):
         """ Ensure that auth token can be encloded as GET parameter """
@@ -38,11 +72,29 @@ class TestAuth(unittest.TestCase):
         )
         request = self.factory.get(
             '/foo/some-nested-endpoint/',
-            data={'AUTH_TOKEN': t.generate_signed_token()}
+            data={"TOKEN": t.generate_signed_token()}
         )
-        ApiTokenAuthentication().authenticate(request)
-        recipient = request.META.get('X-API-Token-Recipient')
-        assert recipient == "my-new-microservice"
+        self.assertEqual(
+            ApiTokenAuthentication().authenticate(request), (self.user, None)
+        )
+
+    def test_custom_get_param(self):
+        class MyCustomAuth(ApiTokenAuthentication):
+            get_param = 'FOOBAR'
+
+        t = TemporaryApiToken(
+            user=self.user,
+            endpoints=dict(GET=['/foo']),
+            max_age=10,
+            recipient='my-new-microservice'
+        )
+        request = self.factory.get(
+            '/foo/some-nested-endpoint/',
+            data={"FOOBAR": t.generate_signed_token()}
+        )
+        self.assertEqual(
+            MyCustomAuth().authenticate(request), (self.user, None)
+        )
 
     def test_invalid_path_request(self):
         """ Ensure that not-permitted paths throws exception """
@@ -54,15 +106,11 @@ class TestAuth(unittest.TestCase):
         )
         request = self.factory.get(
             '/secret',
-            Authorization="Token " + t.generate_signed_token()
+            Authorization="TmpToken " + t.generate_signed_token()
         )
-        try:
+        with self.assertRaises(AuthenticationFailed) as e:
             ApiTokenAuthentication().authenticate(request)
-        except AuthenticationFailed as e:
-            assert str(e) == "Endpoint interaction not permitted by token", \
-                "Wrong msg: {}".format(e)
-        else:
-            assert 0, "Token did not throw error!"
+            self.assertEqual(e, "Endpoint interaction not permitted by token")
 
     def test_expired_token_request(self):
         """ Ensure that expired tokens throws exception """
@@ -73,14 +121,11 @@ class TestAuth(unittest.TestCase):
         )
         request = self.factory.get(
             '/foo/bar',
-            Authorization="Token " + t.generate_signed_token()
+            Authorization="TmpToken " + t.generate_signed_token()
         )
-        try:
+        with self.assertRaises(AuthenticationFailed) as e:
             ApiTokenAuthentication().authenticate(request)
-        except AuthenticationFailed as e:
-            assert str(e) == "Token has expired", "Wrong msg: {}".format(e)
-        else:
-            assert 0, "Token did not throw error!"
+            self.assertEqual(e, "Token has expired")
 
     def test_bad_user_request(self):
         """ Ensure that expired tokens throws exception """
@@ -92,14 +137,11 @@ class TestAuth(unittest.TestCase):
         )
         request = self.factory.get(
             '/foo/bar',
-            Authorization="Token " + t.generate_signed_token()
+            Authorization="TmpToken " + t.generate_signed_token()
         )
-        try:
+        with self.assertRaises(AuthenticationFailed) as e:
             ApiTokenAuthentication().authenticate(request)
-        except AuthenticationFailed as e:
-            assert str(e) == "No such user", "Wrong msg: {}".format(e)
-        else:
-            assert 0, "Token did not throw error!"
+            self.assertEqual(e, "No such user")
 
     def test_different_auth_request(self):
         """
@@ -109,20 +151,17 @@ class TestAuth(unittest.TestCase):
             '/foo/bar',
             Authorization="asdf"
         )
-        assert ApiTokenAuthentication().authenticate(request) is None
+        self.assertIsNone(ApiTokenAuthentication().authenticate(request))
 
     def test_bad_token_request(self):
         """ Ensure that invalid tokens throws exception """
         request = self.factory.get(
             '/foo/bar',
-            Authorization="Token badtoken"
+            Authorization="TmpToken badtoken"
         )
-        try:
+        with self.assertRaises(AuthenticationFailed) as e:
             ApiTokenAuthentication().authenticate(request)
-        except AuthenticationFailed as e:
-            assert str(e) == "Bad API token", "Wrong msg: {}".format(e)
-        else:
-            assert 0, "Token did not throw error!"
+            self.assertEqual(e, "Bad API token")
 
 
 if __name__ == '__main__':

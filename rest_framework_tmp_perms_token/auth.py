@@ -11,14 +11,17 @@ class ApiTokenAuthentication(authentication.BaseAuthentication):
     """
     # http://www.django-rest-framework.org/api-guide/authentication/#custom-authentication
 
+    keyword = 'TmpToken'
+    get_param = 'TOKEN'
+
     def authenticate(self, request):
         signed_token = request.META.get('Authorization')
         if signed_token:
             try:
-                _, signed_token = signed_token.split('Token ')
+                _, signed_token = signed_token.split(self.keyword + ' ')
             except (IndexError, ValueError):
                 return
-        signed_token = signed_token or request.GET.get('AUTH_TOKEN')
+        signed_token = signed_token or request.GET.get(self.get_param, '')
         if signed_token:
             try:
                 token = TemporaryApiToken.from_signed_token(signed_token)

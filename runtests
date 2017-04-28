@@ -42,7 +42,7 @@ def is_set(flag):
 
 def run_tests(args):
     args.insert(1, "test")
-    args.insert(2, "rest_framework_tmp_perms_token_tests")
+    args.insert(2, "test_app")
 
     from django.core.management import execute_from_command_line
 
