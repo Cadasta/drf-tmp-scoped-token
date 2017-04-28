@@ -1,4 +1,4 @@
 [run]
-source = rest_framework_tmp_perms_token
+source = rest_framework_tmp_perms
 [report]
 show_missing = True

@@ -4,7 +4,7 @@ from rest_framework import exceptions
 from .token import TemporaryApiToken
 
 
-class ApiTokenAuthentication(authentication.BaseAuthentication):
+class TmpTokenAuth(authentication.BaseAuthentication):
     """
     Authentication scheme to authenticate with a token located in the
     'Authorization' header or as a 'TOKEN' query parameter.

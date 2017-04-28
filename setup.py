@@ -40,7 +40,7 @@ def get_package_data(package):
 
 
 name = 'drf-temporary-permissions-token'
-package = 'rest_framework_tmp_perms_token'
+package = 'rest_framework_tmp_perms'
 description = 'Temporary Django REST Framework permissions token.'
 url = 'https://github.com/Cadasta/django-buckets'
 author = 'Anthony Lukach'

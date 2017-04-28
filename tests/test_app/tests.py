@@ -3,8 +3,8 @@ import unittest
 from django.contrib.auth import get_user_model
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.test import APIRequestFactory
-from rest_framework_tmp_perms_token.auth import ApiTokenAuthentication
-from rest_framework_tmp_perms_token.token import TemporaryApiToken
+from rest_framework_tmp_perms import TmpTokenAuth
+from rest_framework_tmp_perms import TemporaryApiToken
 
 
 class TestAuth(unittest.TestCase):
@@ -25,7 +25,7 @@ class TestAuth(unittest.TestCase):
             Authorization="TmpToken {}".format(t.generate_signed_token())
         )
         self.assertEqual(
-            ApiTokenAuthentication().authenticate(request), (self.user, None)
+            TmpTokenAuth().authenticate(request), (self.user, None)
         )
 
     def test_api_recipient_header(self):
@@ -39,13 +39,13 @@ class TestAuth(unittest.TestCase):
             '/foo/some-nested-endpoint/',
             Authorization="TmpToken {}".format(t.generate_signed_token())
         )
-        ApiTokenAuthentication().authenticate(request)
+        TmpTokenAuth().authenticate(request)
         self.assertEqual(
             request.META.get('X-API-Token-Recipient'), "my-new-microservice"
         )
 
     def test_custom_keyword(self):
-        class MyCustomAuth(ApiTokenAuthentication):
+        class MyCustomAuth(TmpTokenAuth):
             keyword = 'FooBar'
 
         t = TemporaryApiToken(
@@ -75,11 +75,11 @@ class TestAuth(unittest.TestCase):
             data={"TOKEN": t.generate_signed_token()}
         )
         self.assertEqual(
-            ApiTokenAuthentication().authenticate(request), (self.user, None)
+            TmpTokenAuth().authenticate(request), (self.user, None)
         )
 
     def test_custom_get_param(self):
-        class MyCustomAuth(ApiTokenAuthentication):
+        class MyCustomAuth(TmpTokenAuth):
             get_param = 'FOOBAR'
 
         t = TemporaryApiToken(
@@ -109,7 +109,7 @@ class TestAuth(unittest.TestCase):
             Authorization="TmpToken " + t.generate_signed_token()
         )
         with self.assertRaises(AuthenticationFailed) as e:
-            ApiTokenAuthentication().authenticate(request)
+            TmpTokenAuth().authenticate(request)
             self.assertEqual(e, "Endpoint interaction not permitted by token")
 
     def test_expired_token_request(self):
@@ -124,7 +124,7 @@ class TestAuth(unittest.TestCase):
             Authorization="TmpToken " + t.generate_signed_token()
         )
         with self.assertRaises(AuthenticationFailed) as e:
-            ApiTokenAuthentication().authenticate(request)
+            TmpTokenAuth().authenticate(request)
             self.assertEqual(e, "Token has expired")
 
     def test_bad_user_request(self):
@@ -140,7 +140,7 @@ class TestAuth(unittest.TestCase):
             Authorization="TmpToken " + t.generate_signed_token()
         )
         with self.assertRaises(AuthenticationFailed) as e:
-            ApiTokenAuthentication().authenticate(request)
+            TmpTokenAuth().authenticate(request)
             self.assertEqual(e, "No such user")
 
     def test_different_auth_request(self):
@@ -151,7 +151,7 @@ class TestAuth(unittest.TestCase):
             '/foo/bar',
             Authorization="asdf"
         )
-        self.assertIsNone(ApiTokenAuthentication().authenticate(request))
+        self.assertIsNone(TmpTokenAuth().authenticate(request))
 
     def test_bad_token_request(self):
         """ Ensure that invalid tokens throws exception """
@@ -160,7 +160,7 @@ class TestAuth(unittest.TestCase):
             Authorization="TmpToken badtoken"
         )
         with self.assertRaises(AuthenticationFailed) as e:
-            ApiTokenAuthentication().authenticate(request)
+            TmpTokenAuth().authenticate(request)
             self.assertEqual(e, "Bad API token")
 
 

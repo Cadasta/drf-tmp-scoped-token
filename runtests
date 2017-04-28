@@ -82,7 +82,7 @@ def run_coverage(args):
 
 def run_flake8():
     heading('FLAKE8')
-    ret = subprocess.call("flake8 rest_framework_tmp_perms_token", shell=True)
+    ret = subprocess.call("flake8 rest_framework_tmp_perms", shell=True)
     if not ret:
         success("Flake8 found no issues.")
     return ret
