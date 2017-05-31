@@ -39,9 +39,9 @@ def get_package_data(package):
     return {package: filepaths}
 
 
-name = 'drf-temporary-permissions-token'
-package = 'rest_framework_tmp_perms'
-description = 'Temporary Django REST Framework permissions token.'
+name = 'drf-tmp-scoped-token'
+package = 'rest_framework_tmp_scoped_token'
+description = 'Temporary Django REST Framework permission-scoped token.'
 url = 'https://github.com/Cadasta/django-buckets'
 author = 'Anthony Lukach'
 author_email = 'alukach@cadasta.org'

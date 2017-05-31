@@ -1,8 +1,8 @@
-# DRF Temporary Permissions Token
+# DRF Temporary Scoped Token
 
-[![Build Status](https://travis-ci.org/Cadasta/drf-temporary-permissions-token.svg?branch=master)](https://travis-ci.org/Cadasta/drf-temporary-permissions-token)
+[![Build Status](https://travis-ci.org/Cadasta/drf-tmp-scoped-token.svg?branch=master)](https://travis-ci.org/Cadasta/drf-tmp-scoped-token)
 
-`rest_framework_tmp_perms` provides a Django REST Framework-compatible
+`rest_framework_tmp_scoped_token` provides a Django REST Framework-compatible
 system to generate and validate signed authorization tokens. Generated tokens
 contain the ID of a user on whose behalf the token bearer authenticates, a
 white-list of HTTP verbs and API endpoints that the bearer is permitted to
@@ -12,7 +12,7 @@ access, an max-lifespan of the token, and a note about the intended recipient.
 
 ### Authorization
 
-Add `rest_framework_tmp_perms.TmpTokenAuth` to the
+Add `rest_framework_tmp_scoped_token.TmpTokenAuth` to the
 `DEFAULT_AUTHENTICATION_CLASSES` section of your `REST_FRAMEWORK` settings in
 `settings.py`:
 
@@ -20,7 +20,7 @@ Add `rest_framework_tmp_perms.TmpTokenAuth` to the
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         # ... Your other forms of auth
-        'rest_framework_tmp_perms.TmpTokenAuth',
+        'rest_framework_tmp_scoped_token.TmpTokenAuth',
     )
 }
 ```
@@ -39,12 +39,12 @@ token included in either:
 
 If you would like to customize either the `Authorization` header keyword or the
 `GET` query parameter used, you can subclass the
-`rest_framework_tmp_perms.TmpTokenAuth` class and override the `keyword` or
+`rest_framework_tmp_scoped_token.TmpTokenAuth` class and override the `keyword` or
 `get_param` values.
 
 ### Token
 
-To generate a token, use the `rest_framework_tmp_perms.TemporaryApiToken`
+To generate a token, use the `rest_framework_tmp_scoped_token.TemporaryApiToken`
 class. The token encompasses the following information:
 
 - **user**: User that will be authenticated by token.
