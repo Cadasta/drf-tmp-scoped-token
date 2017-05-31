@@ -1,6 +1,7 @@
 # DRF Temporary Scoped Token
 
 [![Build Status](https://travis-ci.org/Cadasta/drf-tmp-scoped-token.svg?branch=master)](https://travis-ci.org/Cadasta/drf-tmp-scoped-token)
+[![Requirements Status](https://requires.io/github/Cadasta/drf-tmp-scoped-token/requirements.svg?branch=master)](https://requires.io/github/Cadasta/drf-tmp-scoped-token/requirements/?branch=master)
 
 `rest_framework_tmp_scoped_token` provides a Django REST Framework-compatible
 system to generate and validate signed authorization tokens. Generated tokens
