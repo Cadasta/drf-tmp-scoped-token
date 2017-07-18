@@ -22,7 +22,7 @@ class TestAuth(unittest.TestCase):
         )
         request = self.factory.post(
             '/foo/some-nested-endpoint/',
-            Authorization="TmpToken {}".format(t.generate_signed_token())
+            HTTP_AUTHORIZATION="TmpToken {}".format(t.generate_signed_token())
         )
         self.assertEqual(
             TmpTokenAuth().authenticate(request), (self.user, None)
@@ -37,7 +37,7 @@ class TestAuth(unittest.TestCase):
         )
         request = self.factory.post(
             '/foo/some-nested-endpoint/',
-            Authorization="TmpToken {}".format(t.generate_signed_token())
+            HTTP_AUTHORIZATION="TmpToken {}".format(t.generate_signed_token())
         )
         TmpTokenAuth().authenticate(request)
         self.assertEqual(
@@ -56,7 +56,7 @@ class TestAuth(unittest.TestCase):
         )
         request = self.factory.post(
             '/foo/some-nested-endpoint/',
-            Authorization="FooBar {}".format(t.generate_signed_token())
+            HTTP_AUTHORIZATION="FooBar {}".format(t.generate_signed_token())
         )
         self.assertEqual(
             MyCustomAuth().authenticate(request), (self.user, None)
@@ -106,7 +106,7 @@ class TestAuth(unittest.TestCase):
         )
         request = self.factory.get(
             '/secret',
-            Authorization="TmpToken " + t.generate_signed_token()
+            HTTP_AUTHORIZATION="TmpToken " + t.generate_signed_token()
         )
         with self.assertRaises(AuthenticationFailed) as e:
             TmpTokenAuth().authenticate(request)
@@ -121,7 +121,7 @@ class TestAuth(unittest.TestCase):
         )
         request = self.factory.get(
             '/foo/bar',
-            Authorization="TmpToken " + t.generate_signed_token()
+            HTTP_AUTHORIZATION="TmpToken " + t.generate_signed_token()
         )
         with self.assertRaises(AuthenticationFailed) as e:
             TmpTokenAuth().authenticate(request)
@@ -137,7 +137,7 @@ class TestAuth(unittest.TestCase):
         )
         request = self.factory.get(
             '/foo/bar',
-            Authorization="TmpToken " + t.generate_signed_token()
+            HTTP_AUTHORIZATION="TmpToken " + t.generate_signed_token()
         )
         with self.assertRaises(AuthenticationFailed) as e:
             TmpTokenAuth().authenticate(request)
@@ -149,7 +149,7 @@ class TestAuth(unittest.TestCase):
         """
         request = self.factory.get(
             '/foo/bar',
-            Authorization="asdf"
+            HTTP_AUTHORIZATION="asdf"
         )
         self.assertIsNone(TmpTokenAuth().authenticate(request))
 
@@ -157,7 +157,7 @@ class TestAuth(unittest.TestCase):
         """ Ensure that invalid tokens throws exception """
         request = self.factory.get(
             '/foo/bar',
-            Authorization="TmpToken badtoken"
+            HTTP_AUTHORIZATION="TmpToken badtoken"
         )
         with self.assertRaises(AuthenticationFailed) as e:
             TmpTokenAuth().authenticate(request)

@@ -1,5 +1,5 @@
-from rest_framework import authentication
-from rest_framework import exceptions
+from django.utils.six import text_type
+from rest_framework import authentication, exceptions, HTTP_HEADER_ENCODING
 
 from .token import TemporaryApiToken
 
@@ -15,16 +15,20 @@ class TmpTokenAuth(authentication.BaseAuthentication):
     get_param = 'TOKEN'
 
     def authenticate(self, request):
-        signed_token = request.META.get('Authorization')
-        if signed_token:
+        auth = authentication.get_authorization_header(request)
+        if auth:
             try:
-                _, signed_token = signed_token.split(self.keyword + ' ')
+                split = self.keyword + ' '
+                if isinstance(split, text_type):
+                    # Follow DRF in making auth token byestring
+                    split = split.encode(HTTP_HEADER_ENCODING)
+                _, auth = auth.split()
             except (IndexError, ValueError):
                 return
-        signed_token = signed_token or request.GET.get(self.get_param, '')
-        if signed_token:
+        auth = auth or request.GET.get(self.get_param, '')
+        if auth:
             try:
-                token = TemporaryApiToken.from_signed_token(signed_token)
+                token = TemporaryApiToken.from_signed_token(auth)
                 if token.recipient:
                     request.META['X-API-Token-Recipient'] = token.recipient
                 return token.authenticate(request)
