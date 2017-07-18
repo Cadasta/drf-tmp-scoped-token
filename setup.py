@@ -1,93 +1,137 @@
-import sys
+import codecs
 import os
 import re
-import shutil
-from setuptools import setup
+import sys
+from setuptools import setup, find_packages, Command
 
 
-def get_version(package):
+###
+NAME = 'drf-tmp-scoped-token'
+META_PATH = ['rest_framework_tmp_scoped_token', '__init__.py']
+PACKAGES = find_packages()
+CLASSIFIERS = [
+    "Development Status :: 3 - Alpha",
+]
+INSTALL_REQUIRES = [
+    'djangorestframework>=3.6',
+    'six'
+]
+###
+
+
+def read(parts):
     """
-    Return package version as listed in `__version__` in `init.py`.
+    Build an absolute path from parts array and and return the contents
+    of the resulting file.  Assume UTF-8 encoding.
     """
-    init_py = open(os.path.join(package, '__init__.py')).read()
-    return re.search("^__version__ = ['\"]([^'\"]+)['\"]",
-                     init_py, re.MULTILINE).group(1)
+    cur_dir = os.path.abspath(os.path.dirname(__file__))
+    with codecs.open(os.path.join(cur_dir, *parts), "rb", "utf-8") as f:
+        return f.read()
 
 
-def get_packages(package):
+META_FILE = read(META_PATH)
+
+
+def find_meta(meta):
     """
-    Return root package and all sub-packages.
+    Extract __*meta*__ from META_FILE.
     """
-    return [dirpath
-            for dirpath, dirnames, filenames in os.walk(package)
-            if os.path.exists(os.path.join(dirpath, '__init__.py'))]
+    meta_match = re.search(
+        r"^__{meta}__ = ['\"]([^'\"]*)['\"]".format(meta=meta),
+        META_FILE, re.M
+    )
+    if meta_match:
+        return meta_match.group(1)
+    raise RuntimeError("Unable to find __{meta}__ string.".format(meta=meta))
 
 
-def get_package_data(package):
-    """
-    Return all files under the root package, that are not in a
-    package themselves.
-    """
-    walk = [(dirpath.replace(package + os.sep, '', 1), filenames)
-            for dirpath, dirnames, filenames in os.walk(package)
-            if not os.path.exists(os.path.join(dirpath, '__init__.py'))]
-
-    filepaths = []
-    for base, filenames in walk:
-        filepaths.extend([os.path.join(base, filename)
-                          for filename in filenames])
-    return {package: filepaths}
-
-
-name = 'drf-tmp-scoped-token'
-package = 'rest_framework_tmp_scoped_token'
-description = 'Temporary Django REST Framework permission-scoped token.'
-url = 'https://github.com/Cadasta/django-buckets'
-author = 'Anthony Lukach'
-author_email = 'alukach@cadasta.org'
-license = 'AGPL'
-long_description = open('README.md').read().strip()
-version = get_version(package)
-
-if sys.argv[-1] == 'publish':
-    if os.system("pip freeze | grep twine"):
-        print("twine not installed.\nUse `pip install twine`.\nExiting.")
+def ensure_clean_git(operation='operation'):
+    """ Verify that git has no uncommitted changes """
+    if os.system('git diff-index --quiet HEAD --'):
+        print("Unstaged or uncommitted changes detected. {} aborted.".format(
+            operation.capitalize()))
         sys.exit()
-    shutil.rmtree('dist', ignore_errors=True)
-    shutil.rmtree('build', ignore_errors=True)
-    os.system("python setup.py sdist")
-    os.system("python setup.py bdist_wheel")
-    os.system("twine upload dist/*")
-    print("You probably want to also tag the version now:")
-    print("  git tag -a {0} -m 'version {0}'".format(version))
-    print("  git push --tags")
-    sys.exit()
 
-setup(
-    name=name,
-    version=version,
-    url=url,
-    license=license,
-    description=description,
-    long_description=long_description,
-    author=author,
-    author_email=author_email,
-    packages=get_packages(package),
-    package_data=get_package_data(package),
-    install_requires=[
-        'django',
-        'djangorestframework',
-        'six'
-    ],
-    classifiers=[
-        'Development Status :: 3 - Alpha',
-        'Environment :: Web Environment',
-        'Framework :: Django :: 1.9',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: GNU Affero General Public License v3',
-        'Operating System :: OS Independent',
-        'Natural Language :: English',
-        'Programming Language :: Python :: 3.5',
-        'Topic :: Internet :: WWW/HTTP',
-    ]
-)
+
+class CleanCommand(Command):
+    """ Custom clean command to tidy up the project root. """
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        os.system('rm -vrf ./build ./dist ./*.pyc ./*.tgz ./*.egg-info')
+
+
+class PublishCommand(Command):
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        ensure_clean_git('publishing')
+        if os.system("pip freeze | grep twine"):
+            print("twine not installed.\nUse `pip install twine`.\nExiting.")
+            sys.exit()
+        os.system("python setup.py sdist")
+        os.system("python setup.py bdist_wheel")
+        os.system("twine upload --skip-existing dist/*")
+
+
+class TagCommand(Command):
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        ensure_clean_git('tagging')
+        os.system("git tag -a {0} -m 'version {0}'".format(
+            find_meta('version')))
+        os.system("git push --tags")
+
+
+if __name__ == "__main__":
+    long_description = open('README.md').read()
+    try:
+        import pypandoc
+        pattern = re.compile('<.*\w*>')
+        no_html_descr = re.sub(pattern, '', long_description)
+        long_description = pypandoc.convert_text(
+            no_html_descr, 'rst', 'markdown')
+    except(IOError, ImportError):
+        if 'publish' in sys.argv:
+            raise
+
+    setup(
+        name=NAME,
+        packages=PACKAGES,
+        classifiers=CLASSIFIERS,
+
+        version=find_meta('version'),
+        description=find_meta('description'),
+        author=find_meta('author'),
+        author_email=find_meta('email'),
+        license=find_meta('license'),
+        url=find_meta('url'),
+
+        long_description=long_description,
+
+        install_requires=INSTALL_REQUIRES,
+        cmdclass={
+            'clean': CleanCommand,
+            'publish': PublishCommand,
+            'tag': TagCommand,
+        }
+    )
