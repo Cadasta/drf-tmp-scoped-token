@@ -1,10 +1,10 @@
 from django.utils.six import text_type
 from rest_framework import authentication, exceptions, HTTP_HEADER_ENCODING
 
-from .token import TemporaryApiToken
+from .token import TokenManager
 
 
-class TmpTokenAuth(authentication.BaseAuthentication):
+class TokenAuth(authentication.BaseAuthentication):
     """
     Authentication scheme to authenticate with a token located in the
     'Authorization' header or as a 'TOKEN' query parameter.
@@ -28,13 +28,13 @@ class TmpTokenAuth(authentication.BaseAuthentication):
         auth = auth or request.GET.get(self.get_param, '')
         if auth:
             try:
-                token = TemporaryApiToken.from_signed_token(auth)
+                token = TokenManager.parse_token(auth)
                 if token.recipient:
                     request.META['X-API-Token-Recipient'] = token.recipient
                 return token.authenticate(request)
             except (AssertionError, ValueError) as e:
                 raise exceptions.AuthenticationFailed(e)
-            except TemporaryApiToken.SignatureExpired:
+            except TokenManager.SignatureExpired:
                 raise exceptions.AuthenticationFailed("Token has expired")
-            except TemporaryApiToken.BadSignature:
+            except TokenManager.BadSignature:
                 raise exceptions.AuthenticationFailed("Bad API token")

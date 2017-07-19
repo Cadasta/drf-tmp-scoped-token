@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 import six
 
 
-class TemporaryApiToken():
+class TokenManager():
     """
     Class to manage temporary limited-access API tokens. Manages serialization
     and deserialization of API permission payload to/from signed token.
@@ -30,6 +30,18 @@ class TemporaryApiToken():
     SignatureExpired = signing.SignatureExpired
     BadSignature = signing.BadSignature
 
+    def __str__(self):
+        return (
+            '<Token '
+            'user={0.user.username} '
+            'endpoints={0.endpoints} '
+            'max_age={0.max_age} '
+            '>'.format(self)
+        )
+
+    def __repr__(self):
+        return str(self)
+
     def __init__(self, user, endpoints, max_age=360, recipient=None):
         self.user = user
         self.endpoints = endpoints
@@ -37,7 +49,8 @@ class TemporaryApiToken():
         self.recipient = recipient
         self._validate()
 
-    def generate_signed_token(self):
+    def generate_token(self):
+        """ Return signed token representing object's configuration """
         unsigned_token = {
             'user': self.user.id,
             'max_age': self.max_age,
@@ -48,6 +61,10 @@ class TemporaryApiToken():
         return signing.dumps(unsigned_token)  # TODO: Salt
 
     def authenticate(self, request):
+        """
+        Given a request object, validate that interaction is permitted by
+        token.
+        """
         for endpoint in self.endpoints.get(request.method, []):
             if request.path.startswith(endpoint):
                 return (self.user, None)
@@ -55,7 +72,7 @@ class TemporaryApiToken():
             'Endpoint interaction not permitted by token')
 
     @classmethod
-    def from_signed_token(cls, signed_token):
+    def parse_token(cls, signed_token):
         """ Return instance from signed token """
         unsigned_token = cls._parse_token(signed_token)
         unsigned_token['user'] = cls._get_user(unsigned_token['user'])

@@ -13,7 +13,7 @@ access, an max-lifespan of the token, and a note about the intended recipient.
 
 ### Authorization
 
-Add `rest_framework_tmp_scoped_token.TmpTokenAuth` to the
+Add `rest_framework_tmp_scoped_token.TokenAuth` to the
 `DEFAULT_AUTHENTICATION_CLASSES` section of your `REST_FRAMEWORK` settings in
 `settings.py`:
 
@@ -21,7 +21,7 @@ Add `rest_framework_tmp_scoped_token.TmpTokenAuth` to the
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         # ... Your other forms of auth
-        'rest_framework_tmp_scoped_token.TmpTokenAuth',
+        'rest_framework_tmp_scoped_token.TokenAuth',
     )
 }
 ```
@@ -40,12 +40,12 @@ token included in either:
 
 If you would like to customize either the `Authorization` header keyword or the
 `GET` query parameter used, you can subclass the
-`rest_framework_tmp_scoped_token.TmpTokenAuth` class and override the `keyword` or
+`rest_framework_tmp_scoped_token.TokenAuth` class and override the `keyword` or
 `get_param` values.
 
 ### Token
 
-To generate a token, use the `rest_framework_tmp_scoped_token.TemporaryApiToken`
+To generate a token, use the `rest_framework_tmp_scoped_token.TokenManager`
 class. The token encompasses the following information:
 
 - **user**: User that will be authenticated by token.
