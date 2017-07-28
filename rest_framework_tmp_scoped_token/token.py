@@ -60,23 +60,27 @@ class TokenManager():
             unsigned_token['recipient'] = self.recipient
         return signing.dumps(unsigned_token)  # TODO: Salt
 
-    def authenticate(self, request):
+    def validate_request(self, request):
         """
         Given a request object, validate that interaction is permitted by
         token.
         """
         for endpoint in self.endpoints.get(request.method, []):
             if request.path.startswith(endpoint):
-                return (self.user, None)
+                return (self.user, self)
         raise ValueError(
             'Endpoint interaction not permitted by token')
 
     @classmethod
     def parse_token(cls, signed_token):
         """ Return instance from signed token """
-        unsigned_token = cls._parse_token(signed_token)
+        unsigned_token = cls._load_token(signed_token)
         unsigned_token['user'] = cls._get_user(unsigned_token['user'])
-        cls._parse_token(signed_token, max_age=unsigned_token['max_age'])
+
+        # Load token a second time now that we know the provided max_age
+        # value, allowing django.core.signing to raise an error if max_age
+        # is expired.
+        cls._load_token(signed_token, max_age=unsigned_token['max_age'])
         return cls(**unsigned_token)
 
     def _validate(self):
@@ -108,5 +112,14 @@ class TokenManager():
             raise ValueError("No such user")
 
     @staticmethod
-    def _parse_token(signed_token, max_age=None):
+    def _load_token(signed_token, max_age=None):
         return signing.loads(signed_token, max_age=max_age)
+
+    def __eq__(self, other):
+        """
+        Test for equality based object properties, not object's id
+        """
+        return type(other) is type(self) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not self.__eq__(other)

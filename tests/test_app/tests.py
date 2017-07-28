@@ -41,7 +41,7 @@ class TestAuth(unittest.TestCase):
             HTTP_AUTHORIZATION="TmpToken {}".format(t.generate_token())
         )
         self.assertEqual(
-            TokenAuth().authenticate(request), (self.user, None)
+            TokenAuth().authenticate(request), (self.user, t)
         )
 
     def test_api_recipient_header(self):
@@ -75,14 +75,14 @@ class TestAuth(unittest.TestCase):
             HTTP_AUTHORIZATION="FooBar {}".format(t.generate_token())
         )
         self.assertEqual(
-            MyCustomAuth().authenticate(request), (self.user, None)
+            MyCustomAuth().authenticate(request), (self.user, t)
         )
 
     def test_valid_request_query_arg(self):
         """ Ensure that auth token can be encloded as GET parameter """
         t = TokenManager(
             user=self.user,
-            endpoints=dict(GET=['/foo', '/bar'], POST=['/foo']),
+            endpoints={u'GET': [u'/foo', u'/bar'], u'POST': [u'/foo']},
             max_age=10,
             recipient='my-new-microservice'
         )
@@ -91,7 +91,7 @@ class TestAuth(unittest.TestCase):
             data={"TOKEN": t.generate_token()}
         )
         self.assertEqual(
-            TokenAuth().authenticate(request), (self.user, None)
+            TokenAuth().authenticate(request), (self.user, t)
         )
 
     def test_custom_get_param(self):
@@ -109,7 +109,7 @@ class TestAuth(unittest.TestCase):
             data={"FOOBAR": t.generate_token()}
         )
         self.assertEqual(
-            MyCustomAuth().authenticate(request), (self.user, None)
+            MyCustomAuth().authenticate(request), (self.user, t)
         )
 
     def test_invalid_path_request(self):
@@ -144,12 +144,11 @@ class TestAuth(unittest.TestCase):
             self.assertEqual(e, "Token has expired")
 
     def test_bad_user_request(self):
-        """ Ensure that expired tokens throws exception """
+        """ Ensure that missing user throws exception """
         self.user.id = -1
         t = TokenManager(
             user=self.user,
             endpoints=dict(GET=['/foo']),
-            max_age=0  # Immediately expired
         )
         request = self.factory.get(
             '/foo/bar',
@@ -178,6 +177,18 @@ class TestAuth(unittest.TestCase):
         with self.assertRaises(AuthenticationFailed) as e:
             TokenAuth().authenticate(request)
             self.assertEqual(e, "Bad API token")
+
+    def test_equality_override(self):
+        """ Ensure that custom equality check works """
+        props = dict(user=self.user, endpoints=dict(GET=['/foo']))
+        t1 = TokenManager(**props)
+        t2 = TokenManager(**props)
+        props['endpoints'] = dict(GET=['/bar'])
+        t3 = TokenManager(**props)
+        self.assertEqual(t1, t2)
+        self.assertFalse(t1 != t2)
+        self.assertNotEqual(t1, t3)
+        self.assertTrue(t1 != t3)
 
 
 if __name__ == '__main__':
