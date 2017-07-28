@@ -96,3 +96,19 @@ In [6]: print(b64_decode(t.encode('utf8')))
 b'{"something-secret":"hope nobody sees this"}5w\x8e\xcd\xeb\n\t\x1bA ,\xd0\xdb\xd0\xe8\xd8B`\x9b\xb29\xe2?\xed\x98'
 ```
 
+## Contributing
+
+### Testing
+
+```bash
+pip install -r requirements-test.txt
+./runtests
+```
+
+### Deploying
+
+```bash
+pip install -r requirements-deploy.txt
+python setup.py test clean build tag publish
+```
+
