@@ -12,7 +12,7 @@ PACKAGES = find_packages()
 CLASSIFIERS = [
     "Development Status :: 3 - Alpha",
 ]
-INSTALL_REQUIRES = [
+REQUIREMENTS = [
     'djangorestframework>=3.6',
     'six'
 ]
@@ -102,6 +102,21 @@ class TagCommand(Command):
         os.system("git push --tags")
 
 
+class TestCommand(Command):
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        if os.system("./runtests"):
+            print("Tests failed, exiting.")
+            sys.exit()
+
+
 if __name__ == "__main__":
     long_description = open('README.md').read()
     try:
@@ -128,10 +143,12 @@ if __name__ == "__main__":
 
         long_description=long_description,
 
-        install_requires=INSTALL_REQUIRES,
+        install_requires=REQUIREMENTS,
+
         cmdclass={
             'clean': CleanCommand,
             'publish': PublishCommand,
             'tag': TagCommand,
+            'test': TestCommand,
         }
     )
