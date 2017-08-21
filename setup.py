@@ -13,7 +13,7 @@ CLASSIFIERS = [
     "Development Status :: 3 - Alpha",
 ]
 REQUIREMENTS = [
-    'djangorestframework>=3.6',
+    'djangorestframework>=3.4.0',
     'six'
 ]
 ###
@@ -118,7 +118,10 @@ class TestCommand(Command):
 
 
 if __name__ == "__main__":
-    long_description = open('README.md').read()
+    try:
+        long_description = open('README.md').read()
+    except IOError:
+        long_description = "Failed to open README.md"
     try:
         import pypandoc
         pattern = re.compile('<.*\w*>')
