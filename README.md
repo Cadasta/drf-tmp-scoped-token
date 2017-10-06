@@ -87,12 +87,7 @@ eyJzb21ldGhpbmctc2VjcmV0IjoiaG9wZSBub2JvZHkgc2VlcyB0aGlzIn0:1d47N6:woJG0EgLNDb0O
 
 In [4]: import base64
 
-In [5]: def b64_decode(s):
-   ...:     pad = b'=' * (-len(s) % 4)
-   ...:     return base64.urlsafe_b64decode(s + pad)
-   ...:
-
-In [6]: print(b64_decode(t.encode('utf8')))
+In [5]: print(base64.urlsafe_b64decode(t.encode('utf8')))
 b'{"something-secret":"hope nobody sees this"}5w\x8e\xcd\xeb\n\t\x1bA ,\xd0\xdb\xd0\xe8\xd8B`\x9b\xb29\xe2?\xed\x98'
 ```
 
