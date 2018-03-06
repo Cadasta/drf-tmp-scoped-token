@@ -1,17 +1,21 @@
 language: python
 env:
-  - DJANGO_VERSION=1.8 DRF_VERSION=2.4
-  - DJANGO_VERSION=1.9 DRF_VERSION=2.4
-  - DJANGO_VERSION=1.10 DRF_VERSION=2.4
-  - DJANGO_VERSION=1.8 DRF_VERSION=3.6
-  - DJANGO_VERSION=1.9 DRF_VERSION=3.6
-  - DJANGO_VERSION=1.10 DRF_VERSION=3.6
+  - DJANGO_VERSION=1.11 DRF_VERSION=2.4
+  - DJANGO_VERSION=2.0 DRF_VERSION=2.4
+  - DJANGO_VERSION=1.11 DRF_VERSION=3.7
+  - DJANGO_VERSION=2.0 DRF_VERSION=3.7
 python:
   - "2.7"
   - "3.6"
+matrix:
+  exclude:
+    - env: DJANGO_VERSION=2.0 DRF_VERSION=2.4
+      python: "2.7"
+    - env: DJANGO_VERSION=2.0 DRF_VERSION=3.7
+      python: "2.7"
 install:
   - pip install -q Django==$DJANGO_VERSION
-  - pip install -q djangorestframework==$DRF_VERSION
+  - pip install -q djangorestframework>=$DRF_VERSION
   - python setup.py -q install
   - pip install -r requirements-test.txt
 script: ./runtests
