@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import unittest
 
 from django.contrib.auth import get_user_model
@@ -38,6 +39,59 @@ class TestAuth(unittest.TestCase):
         )
         request = self.factory.post(
             '/foo/some-nested-endpoint/',
+            HTTP_AUTHORIZATION="TmpToken {}".format(t.generate_token())
+        )
+        self.assertEqual(
+            TokenAuth().authenticate(request), (self.user, t)
+        )
+
+    def test_token_with_iri(self):
+        """
+        Assert tokens created with Internationalized Resource Identifiers
+        properly authenticate.
+        """
+
+        t = TokenManager(
+            user=self.user,
+            endpoints=dict(GET=[u'/tést']),
+            max_age=10,
+            recipient='my-new-microservice'
+        )
+        request = self.factory.get(
+            u'/tést/some-éndpoint/',
+            HTTP_AUTHORIZATION="TmpToken {}".format(t.generate_token())
+        )
+        self.assertEqual(
+            TokenAuth().authenticate(request), (self.user, t)
+        )
+        request = self.factory.get(
+            '/t%C3%A9st/some-%C3%A9ndpoint/',
+            HTTP_AUTHORIZATION="TmpToken {}".format(t.generate_token())
+        )
+        self.assertEqual(
+            TokenAuth().authenticate(request), (self.user, t)
+        )
+
+    def test_token_with_encoded_iri(self):
+        """
+        Ensure tokens created with Uniform Resource Identifiers properly
+        authenticate.
+        """
+        t = TokenManager(
+            user=self.user,
+            endpoints=dict(GET=['/t%C3%A9st']),
+            max_age=10,
+            recipient='my-new-microservice'
+        )
+        request = self.factory.get(
+            u'/tést/some-éndpoint/',
+            HTTP_AUTHORIZATION="TmpToken {}".format(t.generate_token())
+        )
+        self.assertEqual(
+            TokenAuth().authenticate(request), (self.user, t)
+        )
+        request = self.factory.get(
+            '/t%C3%A9st/some-%C3%A9ndpoint/',
             HTTP_AUTHORIZATION="TmpToken {}".format(t.generate_token())
         )
         self.assertEqual(

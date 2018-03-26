@@ -1,5 +1,7 @@
 from django.core import signing
 from django.contrib.auth import get_user_model
+from django.utils.encoding import iri_to_uri
+
 import six
 
 
@@ -17,6 +19,8 @@ class TokenManager():
             NOTE: This this token will not override any existing permissions
             for its associatted User within the system. It only adds further
             restrictions to the endpoints that can be accessed.
+            NOTE: Endpoints will be automatically encoded via
+            `django.utils.iri_to_uri` when TokenManager is initiated.
         max_age: How long, in seconds, the token will be valid. By default,
             tokens will be valid for 1 hour. Non-expiring tokens are not
             supported.
@@ -48,6 +52,10 @@ class TokenManager():
         self.max_age = max_age
         self.recipient = recipient
         self._validate()
+        self.endpoints = {
+            action: [iri_to_uri(endpoint) for endpoint in endpoints]
+            for action, endpoints in self.endpoints.items()
+        }
 
     def generate_token(self):
         """ Return signed token representing object's configuration """
@@ -65,8 +73,9 @@ class TokenManager():
         Given a request object, validate that interaction is permitted by
         token.
         """
+        path = iri_to_uri(request.path)
         for endpoint in self.endpoints.get(request.method, []):
-            if request.path.startswith(endpoint):
+            if path.startswith(endpoint):
                 return (self.user, self)
         raise ValueError(
             'Endpoint interaction not permitted by token')
