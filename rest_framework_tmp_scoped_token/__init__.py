@@ -2,7 +2,7 @@
 from .auth import TokenAuth
 from .token import TokenManager
 
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 __license__ = 'GNU Affero General Public License v3.0'
 __description__ = 'Temporary Django REST Framework permission-scoped token'
 __author__ = 'Anthony Lukach'
