@@ -1,4 +1,4 @@
 Django>=1.10
 djangorestframework>=3.3
 coverage==5.5
-flake8==3.9.1
+flake8==3.9.2
